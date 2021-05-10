@@ -12,7 +12,7 @@ custom:
       - dev
       - local
     start:
-      port: 8008
+      port: 8000
       inMemory: true
       migrate: true
   bucket: sls-certificates
@@ -26,6 +26,8 @@ provider:
   name: aws
   region: ${opt:region, 'sa-east-1'}
   runtime: nodejs14.x
+  lambdaHashingVersion: 20201221
+  # memorySize: 256
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -42,9 +44,13 @@ provider:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     lambdaHashingVersion: 20201221
 
+# package:
+#   individually: true
+
 functions:
   generateCertificate:
     handler: src/functions/generateCertificate.handle
+    description: "Generate certificate"
     events:
       - http:
           path: /generateCertificate
@@ -58,16 +64,16 @@ functions:
         Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
   verifyCertificate:
       handler: src/functions/verifyCertificate.handle
+      description: "Check the validity of a certificate"
       events:
         - http:
-          path: /verifyCertificate/{id}
-          method: GET
-          cors: true
+            path: /verifyCertificate/{id}
+            method: GET
+            cors: true
       iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:Query
-          - dynamodb:GetItem
         Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
 
 resources:
