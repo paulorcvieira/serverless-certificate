@@ -2,6 +2,7 @@ import chromium from "chrome-aws-lambda";
 import path from "path";
 import handlebars from "handlebars";
 import fs from "fs"
+import { S3 } from "aws-sdk";
 
 import { document } from "../utils/dynamodbClient";
 
@@ -74,10 +75,22 @@ export const handle = async (event) => {
 
   await browser.close();
 
+  console.log("Salvar no S3");
+  const s3 = new S3();
+
+  await s3.putObject({
+      Bucket: "sls-certificates",
+      Key: `${id}.pdf`,
+      ACL: "public-read",
+      Body: pdf,
+      ContentType: "application/pdf"
+  }).promise();
+
   return {
     statusCode: 201,
     body: JSON.stringify({
       message: "Certificate created",
+      url: `https://sls-certificates.s3.amazonaws.com/${id}.pdf`
     }),
     headers: {
       "Content-Type": "application/json"
