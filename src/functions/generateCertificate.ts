@@ -50,12 +50,34 @@ export const handle = async (event) => {
 
   const data: ITemplate = { id, name, grade, date, medal }
 
-  await compile(data);
+  const content = await compile(data);
+
+  console.log("Transformar em PDF");
+  const browser = await chromium.puppeteer.lauch({
+    headless: true,
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: await chromium.executablePath
+  });
+
+  const page = await browser.newPage();
+
+  await page.setContent(content);
+
+  const pdf = await page.pdf({
+      format: "a4",
+      landscape: true,
+      path: process.env.IS_OFFLINE ? "certificate.pdf" : null,
+      printBackground: true,
+      preferCSSPageSize: true,
+  });
+
+  await browser.close();
 
   return {
     statusCode: 201,
     body: JSON.stringify({
-      message: "Certificate created"
+      message: "Certificate created",
     }),
     headers: {
       "Content-Type": "application/json"
