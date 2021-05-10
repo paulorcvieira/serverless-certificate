@@ -11,6 +11,7 @@
   "dependencies": {
     "@middy/core": "^1.5.2",
     "@middy/http-json-body-parser": "^1.5.2",
+    "chrome-aws-lambda": "^9.1.0",
     "handlebars": "^4.7.7",
     "puppeteer-core": "^9.1.1",
     "source-map-support": "^0.5.19"
