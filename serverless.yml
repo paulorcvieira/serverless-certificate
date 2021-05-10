@@ -15,6 +15,7 @@ custom:
       port: 8008
       inMemory: true
       migrate: true
+  bucket: sls-certificates
 
 plugins:
   - serverless-offline
@@ -23,8 +24,17 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs14.x
   region: ${opt:region, 'sa-east-1'}
+  runtime: nodejs14.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: "*"
+    - Effect: Allow
+      Action:
+        - s3:*
+      Resource: "*"
   apiGateway:
     minimumCompressionSize: 1024
     shouldStartNameWithService: true
@@ -40,6 +50,25 @@ functions:
           path: /generateCertificate
           method: POST
           cors: true
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:PutItem
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
+  verifyCertificate:
+      handler: src/functions/verifyCertificate.handle
+      events:
+        - http:
+          path: /verifyCertificate/{id}
+          method: GET
+          cors: true
+      iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Query
+          - dynamodb:GetItem
+        Resource: "arn:aws:dynamodb:${self.provider.region}:*:table/users_certificates"
 
 resources:
   Resources:
@@ -47,12 +76,12 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: users_certificates
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
         KeySchema:
           - AttributeName: id
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
