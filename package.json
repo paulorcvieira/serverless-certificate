@@ -5,11 +5,13 @@
   "main": "serverless.ts",
   "scripts": {
     "dev": "serverless offline",
-    "deploy": "sls deploy -v"
+    "deploy": "sls deploy -v",
+    "dynamo:start": "sls dynamodb start"
   },
   "dependencies": {
     "@middy/core": "^1.5.2",
     "@middy/http-json-body-parser": "^1.5.2",
+    "handlebars": "^4.7.7",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
