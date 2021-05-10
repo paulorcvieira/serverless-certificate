@@ -1,0 +1,58 @@
+service: sls-certification
+
+disabledDeprecations:
+  - "*" # To disable all deprecation messages
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  dynamodb:
+    stages:
+      - dev
+      - local
+    start:
+      port: 8008
+      inMemory: true
+      migrate: true
+
+plugins:
+  - serverless-offline
+  - serverless-webpack
+  - serverless-dynamodb-local
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: ${opt:region, 'sa-east-1'}
+  apiGateway:
+    minimumCompressionSize: 1024
+    shouldStartNameWithService: true
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    lambdaHashingVersion: 20201221
+
+functions:
+  hello:
+    handler: src/functions/hello.handle
+    events:
+      - http:
+          path: /hello
+          method: GET
+          cors: true
+
+resources:
+  Resources:
+    dbCertificateUser:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: users_certificates
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
